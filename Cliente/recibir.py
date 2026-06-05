@@ -1,47 +1,48 @@
-# recibe mensajes entrantes del servidor y lo muestra  con reconexion automatica
+# Recibe mensajes entrantes del servidor y los muestra con reconexion automatica.
 
 import time
 
-from configuracion_conexion import DELAY,BUFFER
-from enchufar_desenchufar import cliente_conectado, cliente_desconectado
+from configuracion_conexion import BUFFER, DELAY
+from enchufar_desenchufar import cliente_conectado
+
+
+def cerrar_socket_actual(estado):
+    if estado["socket"]:
+        try:
+            estado["socket"].close()
+        except OSError:
+            pass
+        finally:
+            estado["socket"] = None
+
 
 def recibir_mensaje(estado):
-    # escucha mensajes del servidor en bucle
-    # 'estado' es un diccionario pompartido con las claves: #
-    # "socket" activo o None
-    # #"desenchufado" True cuando el usuario decide salir
-    while estado["desenchufado"]:
-        #si no hay socket activo, intenta reconectar
+    # Escucha mensajes del servidor en bucle.
+    while not estado["desenchufado"]:
         if estado["socket"] is None:
-            print(f"🔌 Sin conexión activa.\n 🕖 Intentando reconectar en {DELAY} segundos...")
-            cliente_conectado(estado)
+            print(f"Sin conexion activa. Intentando reconectar en {DELAY} segundos...")
             time.sleep(DELAY)
+            cliente_conectado(estado)
             continue
 
         try:
-            # recv() devuelve bytes.
-            mensaje=estado["socket"].recv(BUFFER)
-            # Si recv() devuelve '' significa
-            # que el servidor cerró la conexión.
+            mensaje = estado["socket"].recv(BUFFER)
             if not mensaje:
-                print("⚠️ EL SERVIDOR HA CERRADO LA CONEXION🔌")
-                raise ConnectionError("SERVIDOR CERRO LA CONEXION")
-            usuario_decir=mensaje.decode('utf-8')
-            print(f"\n📩 Nuevo Mensaje{usuario_decir}\n")
-            #NOTA PERSONAL Connection Error debe ir antes de OS error
-            # porque ConnectionError hereda de OsError
-        except ConnectionError as e:
-            print(f"🚩 {e}\n El Servidor ha cerrado la conexión. Intentando reconectar en {DELAY} segundos...")
+                raise ConnectionError("El servidor cerro la conexion")
+
+            usuario_decir = mensaje.decode("utf-8")
+            print(f"\nNuevo mensaje: {usuario_decir}\n")
+        except ConnectionError as error:
+            print(f"{error}. Intentando reconectar en {DELAY} segundos...")
+            cerrar_socket_actual(estado)
+            time.sleep(DELAY)
+        except OSError as error:
+            print(f"Error del sistema al recibir el mensaje: {error}")
+            cerrar_socket_actual(estado)
+            time.sleep(DELAY)
+        except Exception as error:
+            print(f"Error al recibir el mensaje: {error}")
+            cerrar_socket_actual(estado)
             time.sleep(DELAY)
 
-        except OSError as e:
-            print(f"💥 Error del sistema al recibir el mensaje {e}\n contacte a soporte Tecnico.")     
-            cliente_desconectado(estado)
-            time.sleep(DELAY)
-                
-        except Exception as e:
-            print(f"Error al recibir el mensaje: {e}")
-            cliente_desconectado(estado)
-            time.sleep(DELAY)
-    print("🛑 Hilo de recepción finalizado.")
-    
+    print("Hilo de recepcion finalizado.")
