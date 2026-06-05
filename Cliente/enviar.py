@@ -1,36 +1,38 @@
-# se va a encargar de enviar mensajes
-# lee los inputs del usuario "mensajes" y va pal servidor
-from enchufar_desenchufar import cliente_conectado, cliente_desconectado
+# Se encarga de enviar mensajes al servidor.
 
-def enviar_mensaje(estado,nombre):
-    #Lee los mensajes del usuario y los envia al servidor
-    #maneja KeyboardInterruptor para desconectar de forma limpia y segura
-    while True:
+from enchufar_desenchufar import cliente_conectado, cliente_desconectado
+from recibir import cerrar_socket_actual
+
+
+def enviar_mensaje(estado, nombre):
+    # Lee los mensajes del usuario y los envia al servidor.
+    while not estado["desenchufado"]:
         try:
-            mensaje=input("Escribe tu Mensaje (qqq para desconectar)")
-            if mensaje.lower()=="qqq":
-                print("🔌 Desconectando...")
+            mensaje = input("Escribe tu mensaje (qqq para desconectar): ")
+
+            if mensaje.lower() == "qqq":
+                print("Desconectando...")
                 cliente_desconectado(estado)
                 break
-            if estado ["socket"] is None:
-                print ("Sin Conexión Activa")
-                continue
-            if estado["socket"]:
-                usuario_decir=f"-> {nombre}: {mensaje}".encode("utf-8")
-                estado ["socket"].senall(usuario_decir)
-            else:
-                print("No Estás conectado al servidor. verifique la conexion Intenta reconectar...")
+
+            if estado["socket"] is None:
+                print("Sin conexion activa. Intentando reconectar...")
                 cliente_conectado(estado)
-        except OSError:
+
+            if estado["socket"] is None:
+                print("No se pudo enviar porque no hay conexion activa.")
+                continue
+
+            usuario_decir = f"-> {nombre}: {mensaje}".encode("utf-8")
+            estado["socket"].sendall(usuario_decir)
+        except OSError as error:
             if not estado["desenchufado"]:
-                print("Error del sistema al enviar el Mensaje")
-            cliente_desconectado(estado)
+                print(f"Error del sistema al enviar el mensaje: {error}")
+            cerrar_socket_actual(estado)
         except KeyboardInterrupt:
-            print(f"{nombre} Desconecta manualmente (interrupcíon del teclado)...")
-            estado["desenchufado"]=True
+            print(f"{nombre} desconecto manualmente.")
             cliente_desconectado(estado)
             break
-        except Exception as e:
-            print(f"Error al enviar el Mensaje: {e}")
-            cliente_desconectado(estado)
-            break
+        except Exception as error:
+            print(f"Error al enviar el mensaje: {error}")
+            cerrar_socket_actual(estado)
