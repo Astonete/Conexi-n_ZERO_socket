@@ -8,9 +8,9 @@ def enviar_mensaje(estado, nombre):
     # Lee los mensajes del usuario y los envia al servidor.
     while not estado["desenchufado"]:
         try:
-            mensaje = input("Escribe tu mensaje (qqq para desconectar): ")
+            mensaje = input("Escribe tu mensaje (qq para desconectar): ")
 
-            if mensaje.lower() == "qqq":
+            if mensaje.lower() == "qq":
                 print("Desconectando...")
                 cliente_desconectado(estado)
                 break
@@ -23,7 +23,7 @@ def enviar_mensaje(estado, nombre):
                 print("No se pudo enviar porque no hay conexion activa.")
                 continue
 
-            usuario_decir = f"-> {nombre}: {mensaje}".encode("utf-8")
+            usuario_decir = f"☺ {nombre} -> dice: {mensaje}".encode("utf-8")
             estado["socket"].sendall(usuario_decir)
         except OSError as error:
             if not estado["desenchufado"]:
