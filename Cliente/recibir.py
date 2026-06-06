@@ -1,7 +1,6 @@
 # Recibe mensajes entrantes del servidor y los muestra con reconexion automatica.
-
 import time
-
+from datetime import datetime
 from configuracion_conexion import BUFFER, DELAY
 from enchufar_desenchufar import cliente_conectado
 
@@ -31,7 +30,8 @@ def recibir_mensaje(estado):
                 raise ConnectionError("El servidor cerro la conexion")
 
             usuario_decir = mensaje.decode("utf-8")
-            print(f"\nNuevo mensaje: {usuario_decir}\n")
+            hora_actual= datetime.now().strftime("%H:%M")
+            print(f"\n{usuario_decir} √√ ({hora_actual} hrs) ")
         except ConnectionError as error:
             print(f"{error}. Intentando reconectar en {DELAY} segundos...")
             cerrar_socket_actual(estado)
