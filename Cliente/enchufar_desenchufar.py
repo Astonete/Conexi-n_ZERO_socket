@@ -57,7 +57,6 @@ def cliente_conectado(estado):
 
     if estado["socket"] is None and not estado["desenchufado"]:
         print("No se pudo conectar al servidor. Reintentos agotados.")
-        estado["desenchufado"] = True
         return False
 
     return estado["socket"] is not None
